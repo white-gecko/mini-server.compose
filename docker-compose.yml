@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  webpage:
+    image: lipanski/docker-static-website:latest
+    restart: unless-stopped
+    command: /thttpd -D -h 0.0.0.0 -p 3000 -d /data -u static -M 60
+    volumes:
+      - page_data:/data
+  init-repos:
+    image: "alpine/git:latest"
+    entrypoint: [sh, -cue]
+    command:
+      - |
+        git clone -b page-live https://github.com/AKSW/leipzig.dataweek.de.git /data/page
+    volumes:
+      - page_data:/data/page
+  webhook:
+    image: ncarlier/webhookd:latest
+    restart: unless-stopped
+    command: webhookd --scripts=/var/opt/webhookd/scripts
+    volumes:
+      - ./scripts:/var/opt/webhookd/scripts
+      - page_data:/data/page
+volumes:
+  page_data:
